@@ -29,7 +29,7 @@ machine-learning/ │
 - Python
 - Scikit-learn
 - NumPy / Pandas
-- Matplotlib / Seaborn / Plotly
+- Matplotlib / Seaborn
 - Jupyter Notebooks
 
 ## About the Author
