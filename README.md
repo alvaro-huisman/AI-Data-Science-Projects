@@ -1,2 +1,1 @@
-# AI-Data-Science-Projects
-A collection of my projects in AI, Data Science, and Machine Learning.
+IyBBSS1EYXRhLVNjaWVuY2UtUHJvamVjdHMKQSBjb2xsZWN0aW9uIG9mIG15IHByb2plY3RzIGluIEFJLCBEYXRhIFNjaWVuY2UsIGFuZCBNYWNoaW5lIExlYXJuaW5nLgo=
