@@ -1,0 +1,20 @@
+DROP TABLE IF EXISTS `failures`;
+
+CREATE TABLE `failures`
+  WITH (
+    KAFKA_TOPIC    = 'stfail',
+    KEY_FORMAT     = 'AVRO',
+    VALUE_FORMAT   = 'AVRO'
+  ) AS
+SELECT
+  FK->station       AS station,      
+  FK->equipment     AS equipment,    
+  FORMAT_TIMESTAMP(fts, 'HH')    AS hh,               
+  COUNT(*)          AS nf,           
+  AVG(duration)     AS df
+FROM `stg_failures`
+GROUP BY
+  FK->station,
+  FK->equipment,
+  FORMAT_TIMESTAMP(fts, 'HH')
+EMIT CHANGES;

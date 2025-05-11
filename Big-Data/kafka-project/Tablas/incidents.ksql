@@ -1,0 +1,20 @@
+DROP TABLE IF EXISTS `incidents`;
+
+CREATE TABLE `incidents`
+  WITH (
+    KAFKA_TOPIC    = 'stincidents',
+    KEY_FORMAT     = 'AVRO',
+    VALUE_FORMAT   = 'AVRO'
+  ) AS
+SELECT
+  FK->station       AS station,      
+  FK->type     AS type, 
+  FORMAT_TIMESTAMP(its, 'HH')    AS hh,               
+  COUNT(*)          AS ni,
+  AVG(duration)     AS di           
+FROM `stg_incidents`
+GROUP BY
+  FK->station,
+  FK->type,
+  FORMAT_TIMESTAMP(its, 'HH')
+EMIT CHANGES;
