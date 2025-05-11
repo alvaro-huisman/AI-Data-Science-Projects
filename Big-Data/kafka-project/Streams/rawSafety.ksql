@@ -1,0 +1,26 @@
+----------------------------
+-- STREAM raw_failures
+----------------------------
+
+CREATE STREAM `raw_failures` (  
+ id VARCHAR,  
+ equipment VARCHAR,  
+ station VARCHAR,  
+ location VARCHAR,  
+ fts VARCHAR,
+ duration DOUBLE)  
+WITH (kafka_topic='failures', value_format='JSON');
+
+----------------------------
+-- STREAM raw_incidents
+----------------------------
+
+CREATE STREAM `raw_incidents` (  
+ id VARCHAR,  
+ type VARCHAR,  
+ station VARCHAR,  
+ location VARCHAR,  
+ its VARCHAR,
+ severity VARCHAR,
+ duration DOUBLE)  
+WITH (kafka_topic='incidents', value_format='JSON');

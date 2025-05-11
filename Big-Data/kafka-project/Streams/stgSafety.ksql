@@ -1,0 +1,42 @@
+----------------------------
+-- STREAM stg_failures
+----------------------------
+
+CREATE STREAM `stg_failures`
+  WITH (
+    KAFKA_TOPIC   = 'stg_failures', 
+    KEY_FORMAT    = 'AVRO',
+    VALUE_FORMAT  = 'AVRO'
+  ) AS
+SELECT
+  STRUCT(
+    equipment := equipment,
+    station   := station
+  ) AS FK,
+  location,
+  CAST(fts AS TIMESTAMP)   AS fts,
+  duration
+FROM `raw_failures`
+EMIT CHANGES;
+
+----------------------------
+-- STREAM stg_incidents
+----------------------------
+
+CREATE STREAM `stg_incidents`
+  WITH (
+    KAFKA_TOPIC   = 'stg_incidents',
+    KEY_FORMAT    = 'AVRO',
+    VALUE_FORMAT  = 'AVRO'
+  ) AS
+SELECT
+  STRUCT(
+    type    := type,
+    station := station
+  ) AS FK,
+  location,
+  CAST(its AS TIMESTAMP)   AS its,
+  severity,
+  duration
+FROM `raw_incidents`
+EMIT CHANGES;

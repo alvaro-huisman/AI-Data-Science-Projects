@@ -1,0 +1,66 @@
+------------------------
+-- STREAM arrivals
+------------------------
+create stream `arrivals` (  
+ aid VARCHAR,  
+ station VARCHAR,  
+ ats TIMESTAMP,  
+ passengers INTEGER,  
+ dock_number INTEGER,  
+ wagon_count INTEGER,
+ direction VARCHAR  
+ )  
+WITH (  
+ KAFKA_TOPIC='s3arrivals',  
+ VALUE_FORMAT='AVRO'  
+);
+
+--------------------------
+-- STREAM departures
+--------------------------
+create stream `departures` (  
+ did VARCHAR,  
+ station VARCHAR,  
+ dts TIMESTAMP,  
+ passengers INTEGER,  
+ dock_number INTEGER,  
+ wagon_count INTEGER,
+ direction VARCHAR  
+ )  
+WITH (  
+ KAFKA_TOPIC='s3departures',  
+ VALUE_FORMAT='AVRO'  
+);
+
+----------------------------
+-- STREAM passengers
+----------------------------
+create stream `passengers` (  
+ pid VARCHAR,  
+ train_id VARCHAR,
+ station VARCHAR,  
+ pts TIMESTAMP,  
+ waiting_time DOUBLE,
+ ticket_check_time DOUBLE,
+ reduced_flow_factor DOUBLE  
+ )  
+WITH (  
+ KAFKA_TOPIC='s3passengers',  
+ VALUE_FORMAT='AVRO'  
+);
+
+------------------------
+-- STREAM tickets
+------------------------
+create stream `tickets` (  
+ tid VARCHAR,  
+ train_id VARCHAR,
+ station VARCHAR,  
+ tts TIMESTAMP,  
+ validations INTEGER
+ )  
+WITH (  
+ KAFKA_TOPIC='s3tickets',  
+ VALUE_FORMAT='AVRO'  
+);
+
