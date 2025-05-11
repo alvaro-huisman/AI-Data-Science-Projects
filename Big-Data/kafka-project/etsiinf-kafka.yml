@@ -1,0 +1,135 @@
+services:
+  kafka:
+    image: docker.io/bitnami/kafka:latest
+    container_name: kafka
+    ports:
+      - 127.0.0.1:9092:9092
+      - 29092:29092
+    networks:
+      - default
+      - jupyterhub
+    environment:
+      # KRaft settings
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      # Listeners
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:29092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://kafka:29092
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      # - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=PLAINTEXT
+      # Configs
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      # Replace CLUSTER_ID with a unique base64 UUID using "bin/kafka-storage.sh random-uuid" 
+      # See https://docs.confluent.io/kafka/operations-tools/kafka-tools.html#kafka-storage-sh
+      - KAFKA_KRAFT_CLUSTER_ID=2TcAp1NrT1KqkaNS63sfyg
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'test-message' | kafka-console-producer.sh --broker-list localhost:9092 --topic health-check-topic && kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic health-check-topic --from-beginning --max-messages 1 | grep 'test-message'"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.7.1
+    container_name: schema-registry
+    hostname: schema-registry
+    # restart: always
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka:9092'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+    ports:
+      - 127.0.0.1:8081:8081
+    healthcheck:
+      start_period: 10s
+      interval: 10s
+      retries: 20
+      test: curl http://schema-registry:8081/subjects --output /dev/null || exit 1
+    depends_on:
+      - kafka
+
+  rest-proxy:
+    image: confluentinc/cp-kafka-rest:7.7.1
+    container_name: rest-proxy
+    hostname: rest-proxy
+    # restart: always
+    environment:
+      KAFKA_REST_HOST_NAME: rest-proxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: 'kafka:9092'
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
+    ports:
+      - 127.0.0.1:8082:8082
+    depends_on:
+      - kafka
+      - schema-registry
+
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:latest
+    container_name: ksqldb-server
+    hostname: ksqldb-server
+    # restart: always
+    ports:
+      - 127.0.0.1:8088:8088
+      - 127.0.0.1:8083:8083
+    networks:
+      - default
+      - jupyterhub
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_ADVERTISED_LISTENER: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: 'kafka:9092'
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: true
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: true
+      KSQL_HOST_NAME: ksqldb-server
+      KSQL_SASL_MECHANISM: PLAIN
+      KSQL_CONFLUENT_SUPPORT_METRICS_ENABLE: false
+      # Configuration to embed Kafka Connect support.
+      KSQL_CONNECT_GROUP_ID: "ksql-connect-cluster"
+      KSQL_CONNECT_BOOTSTRAP_SERVERS: "kafka:9092"
+      KSQL_CONNECT_REST_ADVERTISED_HOST_NAME: 'ksqldb'
+      KSQL_CONNECT_REST_PORT: 8083
+      KSQL_CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      KSQL_CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      KSQL_CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KSQL_CONNECT_CONFIG_STORAGE_TOPIC: "ksql-connect-configs"
+      KSQL_CONNECT_OFFSET_STORAGE_TOPIC: "ksql-connect-offsets"
+      KSQL_CONNECT_STATUS_STORAGE_TOPIC: "ksql-connect-statuses"
+      KSQL_CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      KSQL_CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      KSQL_CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KSQL_CONNECT_PLUGIN_PATH: "/usr/share/kafka/plugins"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      start_period: 10s
+      interval: 10s
+      retries: 20
+      test: curl -fail --silent http://ksqldb-server:8088/info | grep RUNNING 1>/dev/null || exit 1
+    volumes:
+      - ./confluent-hub-components:/usr/share/kafka/plugins
+    depends_on:
+      - kafka
+      - schema-registry
+  
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:latest
+    container_name: ksqldb-cli
+    depends_on:
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
+
+networks:
+  default: 
+    name: kafka
+    external: true
+  jupyterhub:
+    name: jupyterhub
+    external: true
