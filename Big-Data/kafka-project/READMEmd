@@ -1,0 +1,5 @@
+# Kafka Project
+This folder contains:
+- ibdNN.pdf (Documentation regarding to the project and the elements used)
+- ksql files used during the development
+- docker infrastructure used
