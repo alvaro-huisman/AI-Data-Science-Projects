@@ -1,0 +1,17 @@
+CREATE SOURCE CONNECTOR `source-safety` WITH (
+    "connector.class" = 'io.confluent.connect.s3.source.S3SourceConnector',
+    "store.url" = 'https://izar.ls.fi.upm.es:30009/',
+    "s3.bucket.name" = '4stations',
+    "s3.region" = 'eu-west-2',
+    "aws.access.key.id" = 'YA9JokyWUb2hFUbKYEEN',
+    "aws.secret.access.key" = '0k2ornkQpVTqUrBbOEsEXOnBEEWgJf4AFQOU4O7Y',
+    "format.class" = 'io.confluent.connect.s3.format.json.JsonFormat',
+    "confluent.topic.bootstrap.servers" = 'kafka:9092',
+    "confluent.topic.replication.factor" = '1',
+    "value.converter" = 'org.apache.kafka.connect.json.JsonConverter',
+    "value.converter.schemas.enable" = 'false',
+    "topics.dir" = 'safety/',
+    "topic.regex.list" = 'failures:failures/.*\\.json,incidents:incidents/.*\\.json',
+    "tasks.max" = '1',
+    "internal.kafka.reporter.bootstrap.servers" = 'kafka:9092'
+);

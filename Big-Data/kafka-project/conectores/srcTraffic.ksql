@@ -1,0 +1,17 @@
+CREATE SOURCE CONNECTOR `source-traffic` WITH(
+    "connector.class" = 'io.confluent.connect.s3.source.S3SourceConnector',
+    "store.url" = 'https://izar.ls.fi.upm.es:30009',
+    "s3.bucket.name" = '4stations',
+    "s3.region" = 'eu-west-2',
+    "aws.access.key.id" = 'YA9JokyWUb2hFUbKYEEN',
+    "aws.secret.access.key" = '0k2ornkQpVTqUrBbOEsEXOnBEEWgJf4AFQOU4O7Y',
+    "format.class" = 'io.confluent.connect.s3.format.avro.AvroFormat',
+    "value.converter" = 'io.confluent.connect.avro.AvroConverter',
+    "value.converter.schema.registry.url" = 'http://schema-registry:8081',
+    "confluent.topic.bootstrap.servers" = 'kafka:9092',
+    "confluent.topic.replication.factor" = '1',
+    "topics.dir" = 'traffic/',
+    "s3.partitioner.class" =  'io.confluent.connect.storage.partitioner.FieldPartitioner',
+    "partition.field.name" = 'station',
+    "topic.regex.list" = 's3arrivals:s3arrivals.*\\.avro,s3departures:s3departures.*\\.avro,s3passengers:s3passengers.*\\.avro,s3tickets:s3tickets.*\\.avro',
+    "tasks.max" = '1');
